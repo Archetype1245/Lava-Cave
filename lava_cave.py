@@ -222,8 +222,10 @@ class LC(commands.GroupCog, name="lc"):
 intents = discord.Intents.default()
 intents.message_content = True  # Required to read commands (may not be needed after swap to slash commands)
 token = os.getenv("DISCORD_BOT_TOKEN")
-application_id = int(os.getenv("APPLICATION_ID"))
-bot = commands.Bot(command_prefix="!", intents=intents, application_id=application_id)
+application_id = os.getenv("APPLICATION_ID")
+print("APPLICATION_ID:", app_id_str)
+application_id = int(application_id)
+bot = commands.Bot(command_prefix="!", intents=intents, application_id=1352147079228817448)
 
 
 # ---------------------------
@@ -246,6 +248,5 @@ async def main():
             synced = await bot.tree.sync(guild=guild)
             print(f"Synced {len(synced)} commands for guild {guild_id}")
         await bot.start(token)
-        print("ENV VARIABLES:", dict(os.environ))
 
 asyncio.run(main())
