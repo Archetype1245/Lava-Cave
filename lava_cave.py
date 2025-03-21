@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
+import asyncio
 import os
 
 # Set your GitHub username and repository name here.
@@ -222,6 +223,7 @@ class LC(commands.GroupCog, name="lc"):
         )
         await interaction.response.send_message(help_message, ephemeral=True)
 
+
 # ---------------------------
 # Add Cog and Event Handlers
 # ---------------------------
@@ -229,15 +231,22 @@ class LC(commands.GroupCog, name="lc"):
 async def on_ready():
     print(f"Logged in as {bot.user}")
     try:
-        synced = await bot.tree.sync()
+        # synced = await bot.tree.sync()
+        guild_ids = {928807914498580501, 1341139231086743613}  # Replace with your testing server's ID as an int
+        for guild_id in guild_ids:
+            guild = discord.Object(id=guild_id)
+            await bot.tree.sync(guild=guild)
         print(f"Synced {len(synced)} commands")
     except Exception as e:
         print(f"Error syncing commands: {e}")
 
-bot.add_cog(LC(bot))
 
 # ---------------------------
 # Run the Bot
 # ---------------------------
 # Add the LC cog (you can also load it as an extension if you split the code into modules)
-bot.run(token)
+async def main():
+    async with bot:
+        await bot.add_cog(LC(bot))
+        await bot.start(token)
+        
