@@ -191,6 +191,21 @@ async def lc_stop(ctx):
             except Exception as e:
                 print(f"Error deleting message: {e}")
 
+@lc.command(name="help")
+@commands.cooldown(1, 60, commands.BucketType.channel)
+async def lc_help(ctx):
+    """
+    Displays a help message for Lava Cave Bot commands.
+    """
+    help_message = (
+        "**Lava Cave Bot Commands:**\n\n"
+        "- `!lc start` : Starts the interactive Lava Cave session with floor selection.\n"
+        "- `!lc stop` : Stops the interactive session by deleting the bot's recent messages.\n"
+        "- `!lc <floor>` : Skips the floor selection and directly loads the specified floor's layouts (valid floors: 1-50).\n"
+        "   For example: `!lc 45` loads floor 45.\n"
+    )
+    await ctx.send(help_message)
+
 @bot.check
 def only_in_allowed_channel(ctx):
     return ctx.channel.id == ALLOWED_CHANNEL_ID
