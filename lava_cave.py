@@ -249,4 +249,5 @@ async def main():
     async with bot:
         await bot.add_cog(LC(bot))
         await bot.start(token)
-        
+
+asyncio.run(main())
