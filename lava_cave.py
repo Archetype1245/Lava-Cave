@@ -141,12 +141,19 @@ intents.message_content = True  # Required to read commands (may not be needed a
 token = os.getenv("DISCORD_BOT_TOKEN")
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+# ---------------------------
+# Global Slash Command Check
+# ---------------------------
+def allowed_channel_check(interaction: discord.Interaction) -> bool:
+    return interaction.channel.id in ALLOWED_CHANNELS
 
-# -- Slash Commands Cog --
+bot.tree.add_check(allowed_channel_check)
 
+# ---------------------------
+# Slash Commands Cog
+# ---------------------------
 class LC(commands.GroupCog, name="lc"):
     """Slash command group for Lava Cave Bot commands."""
-
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         super().__init__()
@@ -203,11 +210,9 @@ class LC(commands.GroupCog, name="lc"):
         )
         await interaction.response.send_message(help_message, ephemeral=True)
 
-
-# Set up the cog
-async def setup(bot: commands.Bot):
-    await bot.add_cog(LC(bot))
-
+# ---------------------------
+# Add Cog and Event Handlers
+# ---------------------------
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
@@ -217,15 +222,10 @@ async def on_ready():
     except Exception as e:
         print(f"Error syncing commands: {e}")
 
-@bot.tree.check
-async def allowed_channel_check(interaction: discord.Interaction) -> bool:
-    return interaction.channel.id in ALLOWED_CHANNELS
+bot.add_cog(LC(bot))
 
 # ---------------------------
 # Run the Bot
 # ---------------------------
 # Add the LC cog (you can also load it as an extension if you split the code into modules)
-bot.add_cog(LC(bot))
 bot.run(token)
-
-# test comment
