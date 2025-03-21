@@ -235,8 +235,8 @@ async def on_ready():
         guild_ids = {928807914498580501, 1341139231086743613}  # Replace with your testing server's ID as an int
         for guild_id in guild_ids:
             guild = discord.Object(id=guild_id)
-            await bot.tree.sync(guild=guild)
-        print(f"Synced {len(synced)} commands")
+            synced = await bot.tree.sync(guild=guild)
+            print(f"Synced {len(synced)} commands")
     except Exception as e:
         print(f"Error syncing commands: {e}")
 
