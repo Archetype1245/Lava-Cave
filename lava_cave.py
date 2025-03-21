@@ -217,9 +217,9 @@ async def on_ready():
     except Exception as e:
         print(f"Error syncing commands: {e}")
 
-@bot.check
-def only_in_allowed_channel(ctx):
-    return ctx.channel.id in ALLOWED_CHANNELS
+@bot.tree.check
+async def allowed_channel_check(interaction: discord.Interaction) -> bool:
+    return interaction.channel.id in ALLOWED_CHANNELS
 
 # ---------------------------
 # Run the Bot
