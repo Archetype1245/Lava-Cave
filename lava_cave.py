@@ -144,10 +144,10 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # ---------------------------
 # Global Slash Command Check
 # ---------------------------
-def allowed_channel_check(interaction: discord.Interaction) -> bool:
-    return interaction.channel.id in ALLOWED_CHANNELS
-
-bot.tree.global_checks.append(allowed_channel_check)
+# def allowed_channel_check(interaction: discord.Interaction) -> bool:
+#     return interaction.channel.id in ALLOWED_CHANNELS
+#
+# bot.tree.global_checks.append(allowed_channel_check)
 
 # ---------------------------
 # Slash Commands Cog
@@ -160,6 +160,9 @@ class LC(commands.GroupCog, name="lc"):
 
     @app_commands.command(name="start", description="Starts the interactive Lava Cave session with floor selection.")
     async def start(self, interaction: discord.Interaction):
+        if interaction.channel.id not in ALLOWED_CHANNELS:
+            await interaction.response.send_message("You cannot use this command in this channel.", ephemeral=True)
+            return
         async for message in interaction.channel.history(limit=100):
             if message.author == self.bot.user:
                 try:
@@ -173,6 +176,9 @@ class LC(commands.GroupCog, name="lc"):
 
     @app_commands.command(name="stop", description="Clears the bot's previous messages.")
     async def stop(self, interaction: discord.Interaction):
+        if interaction.channel.id not in ALLOWED_CHANNELS:
+            await interaction.response.send_message("You cannot use this command in this channel.", ephemeral=True)
+            return
         async for message in interaction.channel.history(limit=100):
             if message.author == self.bot.user:
                 try:
@@ -184,6 +190,9 @@ class LC(commands.GroupCog, name="lc"):
 
     @app_commands.command(name="floor", description="Directly load a floor's layouts (provide a number 1-50).")
     async def floor(self, interaction: discord.Interaction, number: int):
+        if interaction.channel.id not in ALLOWED_CHANNELS:
+            await interaction.response.send_message("You cannot use this command in this channel.", ephemeral=True)
+            return
         if number < 1 or number > 50:
             await interaction.response.send_message("Error: Floor number must be between 1 and 50.", ephemeral=True)
             return
@@ -201,6 +210,9 @@ class LC(commands.GroupCog, name="lc"):
 
     @app_commands.command(name="help", description="Shows help for Lava Cave Bot commands.")
     async def help(self, interaction: discord.Interaction):
+        if interaction.channel.id not in ALLOWED_CHANNELS:
+            await interaction.response.send_message("You cannot use this command in this channel.", ephemeral=True)
+            return
         help_message = (
             "**Lava Cave Bot Commands:**\n\n"
             "/lc start : Starts the interactive session with floor selection.\n"
