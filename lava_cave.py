@@ -136,75 +136,85 @@ class LayoutDetailView(discord.ui.View):
 # Bot Initialization and Commands
 # ---------------------------
 intents = discord.Intents.default()
-intents.message_content = True  # Required to read commands
+intents.message_content = True  # Required to read commands (may not be needed after swap to slash commands)
 token = os.getenv("DISCORD_BOT_TOKEN")
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Create a command group for 'lc'
-@bot.group(invoke_without_command=True)
-async def lc(ctx, floor: int = None):
-    """
-    If invoked as !lc <number>, clears previous bot messages and skips directly
-    to showing the merged layouts for that floor.
-    """
-    if floor is None:
-        await ctx.send("Usage: `!lc start` to start, `!lc stop` to stop, or `!lc <floor>` to go directly to a floor.")
-    else:
-        # Validate the floor number.
-        if floor < 1 or floor > 50:
-            await ctx.send("Error: Floor number must be between 1 and 50.")
-            return
 
-        # Clear previous bot messages.
-        async for message in ctx.channel.history(limit=100):
-            if message.author == bot.user:
+# -- Slash Commands Cog --
+
+class LC(commands.GroupCog, name="lc"):
+    """Slash command group for Lava Cave Bot commands."""
+
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+        super().__init__()
+
+    @app_commands.command(name="start", description="Starts the interactive Lava Cave session with floor selection.")
+    async def start(self, interaction: discord.Interaction):
+        async for message in interaction.channel.history(limit=100):
+            if message.author == self.bot.user:
                 try:
                     await message.delete()
                 except Exception as e:
                     print(f"Error deleting message: {e}")
-        merged_url = f"{GITHUB_BASE_URL}/merged_images/merged-floor-{floor}.png"
-        embed = discord.Embed(title=f"Floor {floor} Layouts")
+
+        floors = list(range(1, 51))
+        view = FloorSelectionView(floors)
+        await interaction.response.send_message("Select a floor:", view=view)
+
+    @app_commands.command(name="stop", description="Clears the bot's previous messages.")
+    async def stop(self, interaction: discord.Interaction):
+        async for message in interaction.channel.history(limit=100):
+            if message.author == self.bot.user:
+                try:
+                    await message.delete()
+                except Exception as e:
+                    print(f"Error deleting message: {e}")
+                    
+        # await interaction.response.send_message("Cleared bot messages.", ephemeral=True)
+
+    @app_commands.command(name="floor", description="Directly load a floor's layouts (provide a number 1-50).")
+    async def floor(self, interaction: discord.Interaction, number: int):
+        if number < 1 or number > 50:
+            await interaction.response.send_message("Error: Floor number must be between 1 and 50.", ephemeral=True)
+            return
+        async for message in interaction.channel.history(limit=100):
+            if message.author == self.bot.user:
+                try:
+                    await message.delete()
+                except Exception as e:
+                    print(f"Error deleting message: {e}")
+        merged_url = f"{GITHUB_BASE_URL}/merged_images/merged-floor-{number}.png"
+        embed = discord.Embed(title=f"Floor {number} Layouts")
         embed.set_image(url=merged_url)
-        await ctx.send(f"Selected floor {floor}. Choose a layout:", embed=embed, view=LayoutSelectionView(floor))
+        await interaction.response.send_message(f"Selected floor {number}. Choose a layout:", embed=embed,
+                                                view=LayoutSelectionView(number))
 
-@lc.command(name="start")
-async def lc_start(ctx):
-    """Starts the Lava Cave interactive session with floor selection."""
-    # Clear previous bot messages.
-    async for message in ctx.channel.history(limit=100):
-        if message.author == bot.user:
-            try:
-                await message.delete()
-            except Exception as e:
-                print(f"Error deleting message: {e}")
-    floors = list(range(1, 51))
-    view = FloorSelectionView(floors)
-    await ctx.send("Select a floor:", view=view)
+    @app_commands.command(name="help", description="Shows help for Lava Cave Bot commands.")
+    async def help(self, interaction: discord.Interaction):
+        help_message = (
+            "**Lava Cave Bot Commands:**\n\n"
+            "/lc start : Starts the interactive session with floor selection.\n"
+            "/lc stop : Clears the bot's previous messages.\n"
+            "/lc floor <number> : Directly loads the specified floor's layouts (1-50).\n"
+            "/lc help : Shows this help message.\n"
+        )
+        await interaction.response.send_message(help_message, ephemeral=True)
 
-@lc.command(name="stop")
-async def lc_stop(ctx):
-    """Stops the interactive session by deleting recent bot messages."""
-    async for message in ctx.channel.history(limit=100):
-        if message.author == bot.user:
-            try:
-                await message.delete()
-            except Exception as e:
-                print(f"Error deleting message: {e}")
 
-@lc.command(name="help")
-@commands.cooldown(1, 60, commands.BucketType.channel)
-async def lc_help(ctx):
-    """
-    Displays a help message for Lava Cave Bot commands.
-    """
-    help_message = (
-        "**Lava Cave Bot Commands:**\n\n"
-        "- `!lc start` : Starts the interactive Lava Cave session with floor selection.\n"
-        "- `!lc stop` : Stops the interactive session by deleting the bot's recent messages.\n"
-        "- `!lc <floor>` : Skips the floor selection and directly loads the specified floor's layouts (valid floors: 1-50).\n"
-        "   For example: `!lc 45` loads floor 45.\n"
-    )
-    await ctx.send(help_message)
+# Set up the cog
+async def setup(bot: commands.Bot):
+    await bot.add_cog(LC(bot))
+
+@bot.event
+async def on_ready():
+    print(f"Logged in as {bot.user}")
+    try:
+        synced = await bot.tree.sync()
+        print(f"Synced {len(synced)} commands")
+    except Exception as e:
+        print(f"Error syncing commands: {e}")
 
 @bot.check
 def only_in_allowed_channel(ctx):
@@ -213,4 +223,6 @@ def only_in_allowed_channel(ctx):
 # ---------------------------
 # Run the Bot
 # ---------------------------
+# Add the LC cog (you can also load it as an extension if you split the code into modules)
+bot.add_cog(LC(bot))
 bot.run(token)
