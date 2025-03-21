@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 import os
 
 # Set your GitHub username and repository name here.
@@ -171,7 +172,7 @@ class LC(commands.GroupCog, name="lc"):
                     await message.delete()
                 except Exception as e:
                     print(f"Error deleting message: {e}")
-                    
+
         # await interaction.response.send_message("Cleared bot messages.", ephemeral=True)
 
     @app_commands.command(name="floor", description="Directly load a floor's layouts (provide a number 1-50).")
