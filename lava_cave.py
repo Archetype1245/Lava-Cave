@@ -6,6 +6,7 @@ import os
 GITHUB_USERNAME = "Archetype1245"
 REPO_NAME = "Lava-Cave"
 GITHUB_BASE_URL = f"https://{GITHUB_USERNAME}.github.io/{REPO_NAME}"
+ALLOWED_CHANNEL_ID = 928807944487841842  # Replace with your channel's ID (an integer)
 VIEW_TIMEOUT = None
 
 # ---------------------------
@@ -189,6 +190,10 @@ async def lc_stop(ctx):
                 await message.delete()
             except Exception as e:
                 print(f"Error deleting message: {e}")
+
+@bot.check
+def only_in_allowed_channel(ctx):
+    return ctx.channel.id == ALLOWED_CHANNEL_ID
 
 # ---------------------------
 # Run the Bot
