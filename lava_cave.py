@@ -223,7 +223,7 @@ intents = discord.Intents.default()
 intents.message_content = True  # Required to read commands (may not be needed after swap to slash commands)
 token = os.getenv("DISCORD_BOT_TOKEN")
 application_id = os.getenv("APPLICATION_ID")
-print("APPLICATION_ID:", app_id_str)
+print("APPLICATION_ID:", application_id)
 application_id = int(application_id)
 bot = commands.Bot(command_prefix="!", intents=intents, application_id=1352147079228817448)
 
