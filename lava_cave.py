@@ -135,14 +135,6 @@ class LayoutDetailView(discord.ui.View):
         self.add_item(button)
 
 # ---------------------------
-# Bot Initialization and Commands
-# ---------------------------
-intents = discord.Intents.default()
-intents.message_content = True  # Required to read commands (may not be needed after swap to slash commands)
-token = os.getenv("DISCORD_BOT_TOKEN")
-bot = commands.Bot(command_prefix="!", intents=intents)
-
-# ---------------------------
 # Global Slash Command Check
 # ---------------------------
 # def allowed_channel_check(interaction: discord.Interaction) -> bool:
@@ -225,21 +217,20 @@ class LC(commands.GroupCog, name="lc"):
 
 
 # ---------------------------
+# Bot Initialization and Commands
+# ---------------------------
+intents = discord.Intents.default()
+intents.message_content = True  # Required to read commands (may not be needed after swap to slash commands)
+token = os.getenv("DISCORD_BOT_TOKEN")
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+
+# ---------------------------
 # Add Cog and Event Handlers
 # ---------------------------
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
-    try:
-        # synced = await bot.tree.sync()
-        guild_ids = {928807914498580501, 1341139231086743613}  # Replace with your testing server's ID as an int
-        for guild_id in guild_ids:
-            guild = discord.Object(id=guild_id)
-            synced = await bot.tree.sync(guild=guild)
-            print(f"Synced {len(synced)} commands")
-    except Exception as e:
-        print(f"Error syncing commands: {e}")
-
 
 # ---------------------------
 # Run the Bot
@@ -248,6 +239,11 @@ async def on_ready():
 async def main():
     async with bot:
         await bot.add_cog(LC(bot))
+        guild_ids = {928807914498580501, 1341139231086743613}
+        for guild_id in guild_ids:
+            guild = discord.Object(id=guild_id)
+            synced = await bot.tree.sync(guild=guild)
+            print(f"Synced {len(synced)} commands for guild {guild_id}")
         await bot.start(token)
 
 asyncio.run(main())
