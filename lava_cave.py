@@ -242,11 +242,15 @@ async def on_ready():
 async def main():
     async with bot:
         await bot.add_cog(LC(bot))
+        await bot.wait_until_ready()
+        print("Application ID:", bot.application_id)  # Debug print to confirm
+
         guild_ids = {928807914498580501, 1341139231086743613}
         for guild_id in guild_ids:
             guild = discord.Object(id=guild_id)
             synced = await bot.tree.sync(guild=guild)
             print(f"Synced {len(synced)} commands for guild {guild_id}")
+
         await bot.start(token)
 
 asyncio.run(main())
