@@ -208,7 +208,7 @@ async def lc_help(ctx):
 
 @bot.check
 def only_in_allowed_channel(ctx):
-    return ctx.channel.id == ALLOWED_CHANNELS
+    return ctx.channel.id in ALLOWED_CHANNELS
 
 # ---------------------------
 # Run the Bot
