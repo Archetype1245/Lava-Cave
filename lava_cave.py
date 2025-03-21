@@ -147,7 +147,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 def allowed_channel_check(interaction: discord.Interaction) -> bool:
     return interaction.channel.id in ALLOWED_CHANNELS
 
-bot.tree.add_check(allowed_channel_check)
+bot.tree.global_checks.append(allowed_channel_check)
 
 # ---------------------------
 # Slash Commands Cog
