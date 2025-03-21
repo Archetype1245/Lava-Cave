@@ -149,6 +149,11 @@ async def lc(ctx, floor: int = None):
     if floor is None:
         await ctx.send("Usage: `!lc start` to start, `!lc stop` to stop, or `!lc <floor>` to go directly to a floor.")
     else:
+        # Validate the floor number.
+        if floor < 1 or floor > 50:
+            await ctx.send("Error: Floor number must be between 1 and 50.")
+            return
+
         # Clear previous bot messages.
         async for message in ctx.channel.history(limit=100):
             if message.author == bot.user:
