@@ -227,3 +227,5 @@ def only_in_allowed_channel(ctx):
 # Add the LC cog (you can also load it as an extension if you split the code into modules)
 bot.add_cog(LC(bot))
 bot.run(token)
+
+# test comment
