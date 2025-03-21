@@ -246,5 +246,6 @@ async def main():
             synced = await bot.tree.sync(guild=guild)
             print(f"Synced {len(synced)} commands for guild {guild_id}")
         await bot.start(token)
+        print("ENV VARIABLES:", dict(os.environ))
 
 asyncio.run(main())
