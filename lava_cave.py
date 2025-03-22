@@ -134,123 +134,125 @@ class LayoutDetailView(discord.ui.View):
         button.callback = return_to_layout
         self.add_item(button)
 
-# ---------------------------
-# Global Slash Command Check
-# ---------------------------
-# def allowed_channel_check(interaction: discord.Interaction) -> bool:
-#     return interaction.channel.id in ALLOWED_CHANNELS
-#
-# bot.tree.global_checks.append(allowed_channel_check)
 
-# ---------------------------
-# Slash Commands Cog
-# ---------------------------
-class LC(commands.GroupCog, name="lc"):
-    """Slash command group for Lava Cave Bot commands."""
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-        super().__init__()
-
-    @app_commands.command(name="start", description="Starts the interactive Lava Cave session with floor selection.")
-    async def start(self, interaction: discord.Interaction):
-        if interaction.channel.id not in ALLOWED_CHANNELS:
-            await interaction.response.send_message("You cannot use this command in this channel.", ephemeral=True)
-            return
-        async for message in interaction.channel.history(limit=100):
-            if message.author == self.bot.user:
-                try:
-                    await message.delete()
-                except Exception as e:
-                    print(f"Error deleting message: {e}")
-
-        floors = list(range(1, 51))
-        view = FloorSelectionView(floors)
-        await interaction.response.send_message("Select a floor:", view=view)
-
-    @app_commands.command(name="stop", description="Clears the bot's previous messages.")
-    async def stop(self, interaction: discord.Interaction):
-        if interaction.channel.id not in ALLOWED_CHANNELS:
-            await interaction.response.send_message("You cannot use this command in this channel.", ephemeral=True)
-            return
-        async for message in interaction.channel.history(limit=100):
-            if message.author == self.bot.user:
-                try:
-                    await message.delete()
-                except Exception as e:
-                    print(f"Error deleting message: {e}")
-
-        # await interaction.response.send_message("Cleared bot messages.", ephemeral=True)
-
-    @app_commands.command(name="floor", description="Directly load a floor's layouts (provide a number 1-50).")
-    async def floor(self, interaction: discord.Interaction, number: int):
-        if interaction.channel.id not in ALLOWED_CHANNELS:
-            await interaction.response.send_message("You cannot use this command in this channel.", ephemeral=True)
-            return
-        if number < 1 or number > 50:
-            await interaction.response.send_message("Error: Floor number must be between 1 and 50.", ephemeral=True)
-            return
-        async for message in interaction.channel.history(limit=100):
-            if message.author == self.bot.user:
-                try:
-                    await message.delete()
-                except Exception as e:
-                    print(f"Error deleting message: {e}")
-        merged_url = f"{GITHUB_BASE_URL}/merged_images/merged-floor-{number}.png"
-        embed = discord.Embed(title=f"Floor {number} Layouts")
-        embed.set_image(url=merged_url)
-        await interaction.response.send_message(f"Selected floor {number}. Choose a layout:", embed=embed,
-                                                view=LayoutSelectionView(number))
-
-    @app_commands.command(name="help", description="Shows help for Lava Cave Bot commands.")
-    async def help(self, interaction: discord.Interaction):
-        if interaction.channel.id not in ALLOWED_CHANNELS:
-            await interaction.response.send_message("You cannot use this command in this channel.", ephemeral=True)
-            return
-        help_message = (
-            "**Lava Cave Bot Commands:**\n\n"
-            "/lc start : Starts the interactive session with floor selection.\n"
-            "/lc stop : Clears the bot's previous messages.\n"
-            "/lc floor <number> : Directly loads the specified floor's layouts (1-50).\n"
-            "/lc help : Shows this help message.\n"
-        )
-        await interaction.response.send_message(help_message, ephemeral=True)
-
-
-# ---------------------------
-# Bot Initialization and Commands
-# ---------------------------
 intents = discord.Intents.default()
 intents.message_content = True  # Required to read commands (may not be needed after swap to slash commands)
 token = os.getenv("DISCORD_BOT_TOKEN")
-application_id = os.getenv("APPLICATION_ID")
+application_id = 1352147079228817448
 print("APPLICATION_ID:", application_id)
-application_id = int(application_id)
 bot = commands.Bot(command_prefix="!", intents=intents, application_id=1352147079228817448)
 
+# Define the slash command group
+lc_group = app_commands.Group(name="lc", description="Lava Cave Bot commands")
 
-# ---------------------------
-# Add Cog and Event Handlers
-# ---------------------------
+@lc_group.command(name="floor", description="Jump directly to a floor layout or open selector")
+@app_commands.describe(number="The floor number to view (1–50)")
+async def floor(interaction: discord.Interaction, number: int = None):
+    if interaction.channel.id not in ALLOWED_CHANNELS:
+        await interaction.response.send_message("This command isn't allowed here.", ephemeral=True)
+        return
+
+    if number is not None:
+        if number < 1 or number > 50:
+            await interaction.response.send_message("❌ Floor must be between 1 and 50.", ephemeral=True)
+            return
+
+        # Valid number, clear and show layouts for that floor
+        async for message in interaction.channel.history(limit=100):
+            if message.author == interaction.client.user:
+                try:
+                    await message.delete()
+                except:
+                    pass
+
+        merged_url = f"{GITHUB_BASE_URL}/merged_images/merged-floor-{number}.png"
+        embed = discord.Embed(title=f"Floor {number} Layouts")
+        embed.set_image(url=merged_url)
+        await interaction.response.send_message(
+            f"Selected floor {number}. Choose a layout:",
+            embed=embed,
+            view=LayoutSelectionView(number)
+        )
+    else:
+        # No number provided — just open selector
+        async for message in interaction.channel.history(limit=100):
+            if message.author == interaction.client.user:
+                try:
+                    await message.delete()
+                except:
+                    pass
+
+        view = FloorSelectionView(list(range(1, 51)))
+        await interaction.response.send_message("Select a floor:", view=view)
+
+
+@lc_group.command(name="clear", description="Deletes the bot's previous messages from this channel.")
+async def clear(interaction: discord.Interaction):
+    if interaction.channel.id not in ALLOWED_CHANNELS:
+        await interaction.response.send_message("This command isn't allowed here.", ephemeral=True)
+        return
+
+    deleted = 0
+    async for message in interaction.channel.history(limit=100):
+        if message.author == interaction.client.user:
+            try:
+                await message.delete()
+                deleted += 1
+            except:
+                pass
+
+    await interaction.response.send_message(
+        f"🧹 Cleared {deleted} bot message(s) from the last 100 messages.",
+        ephemeral=True
+    )
+
+
+@lc_group.command(name="help", description="Shows help for Lava Cave Bot commands.")
+async def help(interaction: discord.Interaction):
+    if interaction.channel.id not in ALLOWED_CHANNELS:
+        await interaction.response.send_message("This command isn't allowed here.", ephemeral=True)
+        return
+
+    help_message = (
+        "**Lava Cave Bot Help**\n\n"
+        "`/lc floor` – Starts the interactive floor selection session.\n"
+        "`/lc floor <number>` – Instantly loads layouts for the selected floor (1–50).\n"
+        "`/lc clear` – Clears the bot's previous messages from this channel.\n"
+        "`/lc help` – Shows this help message.\n"
+    )
+    await interaction.response.send_message(help_message, ephemeral=True)
+
+
+
+# Main function to run bot
+async def main():
+    async with bot:
+        for command in bot.tree.get_commands():
+            print(len(bot.tree.get_commands()))
+            print(f"Found command: {command.name}")
+        print("Added lc_group command")
+        await bot.start(token)
+
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
 
-# ---------------------------
-# Run the Bot
-# ---------------------------
-# Add the LC cog (you can also load it as an extension if you split the code into modules)
-async def main():
-    async with bot:
-        await bot.add_cog(LC(bot))
-        await bot.wait_until_ready()
-        print("Application ID:", bot.application_id)  # Debug print to confirm
+    bot.tree.add_command(lc_group)
 
-        guild_ids = {928807914498580501, 1341139231086743613}
-        for guild_id in guild_ids:
-            guild = discord.Object(id=guild_id)
-            synced = await bot.tree.sync(guild=guild)
-            print(f"Synced {len(synced)} commands for guild {guild_id}")
+    try:
+        print("Commands BEFORE sync:", bot.tree.get_commands())
+        synced = await bot.tree.sync()
+        print("✅ Synced commands:", synced)
 
-        await bot.start(token)
+        print("Commands AFTER sync:")
+        print("Synced subcommands in /lc:")
+        for cmd in bot.tree.get_commands():
+            if cmd.name == "lc" and isinstance(cmd, app_commands.Group):
+                for subcmd in cmd.commands:
+                    print(f"  /lc {subcmd.name} — {subcmd.description}")
+    except Exception as e:
+        print(f"Sync error: {e}")
+
 
 asyncio.run(main())
