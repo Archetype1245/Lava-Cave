@@ -8,7 +8,8 @@ import os
 GITHUB_USERNAME = "Archetype1245"
 REPO_NAME = "Lava-Cave"
 GITHUB_BASE_URL = f"https://{GITHUB_USERNAME}.github.io/{REPO_NAME}"
-ALLOWED_CHANNELS = {928807944487841842, 1352712382769664010, 1402388158196355142}  # Replace with your channel's ID (an integer)
+# ALLOWED_CHANNELS = {928807944487841842, 1352712382769664010, 1402388158196355142}
+ALLOWED_CHANNELS = set()
 VIEW_TIMEOUT = None
 
 # ---------------------------
@@ -148,7 +149,7 @@ lc_group = app_commands.Group(name="lc", description="Lava Cave Bot commands")
 @lc_group.command(name="floor", description="Jump directly to a floor layout or open selector")
 @app_commands.describe(number="The floor number to view (1–50)")
 async def floor(interaction: discord.Interaction, number: int = None):
-    if interaction.channel.id not in ALLOWED_CHANNELS:
+    if ALLOWED_CHANNELS and interaction.channel.id not in ALLOWED_CHANNELS:
         await interaction.response.send_message("This command isn't allowed here.", ephemeral=True)
         return
 
@@ -188,7 +189,7 @@ async def floor(interaction: discord.Interaction, number: int = None):
 
 @lc_group.command(name="clear", description="Deletes the bot's previous messages from this channel.")
 async def clear(interaction: discord.Interaction):
-    if interaction.channel.id not in ALLOWED_CHANNELS:
+    if ALLOWED_CHANNELS and interaction.channel.id not in ALLOWED_CHANNELS:
         await interaction.response.send_message("This command isn't allowed here.", ephemeral=True)
         return
 
@@ -209,7 +210,7 @@ async def clear(interaction: discord.Interaction):
 
 @lc_group.command(name="help", description="Shows help for Lava Cave Bot commands.")
 async def help(interaction: discord.Interaction):
-    if interaction.channel.id not in ALLOWED_CHANNELS:
+    if ALLOWED_CHANNELS and interaction.channel.id not in ALLOWED_CHANNELS:
         await interaction.response.send_message("This command isn't allowed here.", ephemeral=True)
         return
 
